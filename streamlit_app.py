@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-st.set_page_config(page_title="Flashcards Urologia", page_icon="🧠")
+st.set_page_config(page_title="Urocards", page_icon="🧠")
 
 st.title("🧠 Urocards - Flashcards de Urologia")
 
