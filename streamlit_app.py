@@ -155,11 +155,47 @@ flashcards = [
         "pergunta": "Um paciente de 1 ano com abaulamento em região inguinal esquerda e testículo tópico direito. Quais as hipóteses e como diferenciá-las?",
         "resposta": "Criptocardia e Hérnia inguinal -> diferenciar através do exame físico associado ao US inguinal"
     },
+    # --- Novos flashcards ---
+    {
+        "pergunta": "Qual é o principal risco clínico associado ao RVU não tratado?",
+        "resposta": "Pielonefrite recorente que pode evoluir com cicatrizes renais permanentes, levando a hipertensão arterial e, em casos graves, disfunção renal crônica."
+    },
+    {
+        "pergunta": "O que é parafimose e por que é uma urgência?",
+        "resposta": "Parafimose ocorre quand o prepúcio é retraído atrás da glande e não consegue retornar, sendo uma urgência porque causa edema com risco de isquemia da glande"
+    },
+    {
+        "pergunta": "Por que o ultrassom de vias urinárias não é suficiente para excluir o diagnóstico de RVU, mesmo quando normal?",
+        "resposta": "Porque a RVU é um fenômeno dinâmico e o US é um exame estático, não permitindo ver o refluxo"
+    },
+    {
+        "pergunta": "Por que a função renal diferencial <40% é considerada um marcador decisivo de obstrução significativa, e como isso orienta a conduta?",
+        "resposta": "Valores <40% indicam perda funcional relvante, definindo obstrução com repercussão hemodinâmica importante e orientado cirurgia para evitar deterioração irreversível"
+    },
+    {
+        "pergunta": "Em quadros de apresentação tardia (adolescentes/adultos), como sintomas como dor intermitente e nefrolitíase se relacionam com a fisiopatologia da obstrução?",
+        "resposta": "Dor surge por picos de aumento da pressão intrapélvica associados à maior produção de urina"
+    },
+    {
+        "pergunta": "De que forma os fatores extrínsecos, especialmente vasos cruzantes, podem atuar isoladamente ou em sinergia com fatores intrínsecos na obstrução da JUP?",
+        "resposta": "Vasos cruzando anteriormente a JUP comprimem o ureter proximal, amplificando a obstrução já existente por fatores intrínsecos"
+    },
+    {
+        "pergunta": "Qual a diferença anatômica entre a hipospádia e a epispátia?",
+        "resposta": "- Hipospádia: meato uretral ectópico em região ventral do pênis\n- Epispádia: meato uretral ectópico em região dorsal do pênis podendo estar associado a extrofia de bexiga"
+    },
+    {
+        "pergunta": "Diferencie a causa da infertilidade da epispádia e na hipospádia.",
+        "resposta": "- Epispádia: disfunção esfincteriana/colo vesical com ejaculação retrógrada/anômala + deformidade peniana importante\n- Hipospádia: dificuldade na deposição seminal no colo uterino devido presença de meato uretral ventral e proximal + curvatura penina (chordee)"
+    },
+    {
+        "pergunta": "Considere uma situação de Pronto-Socorro em que você atenderá um paciente que tem hipótese diagnóstica de torção de testículo. À partir do quadro clínico clássico, quais as duas ações/exames que você faria/pediria como médico?",
+        "resposta": "- Exame físico geralmente estático (eritema, edema) + dor\n- Cirurgia de urgência (US Doppler sem atrasar cirurgia)"
+    },
 ]
 
 # --- Estado inicial ---
 if "order" not in st.session_state:
-    # cria uma lista com os índices dos cards e embaralha
     st.session_state.order = list(range(len(flashcards)))
     random.shuffle(st.session_state.order)
 
