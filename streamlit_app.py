@@ -153,7 +153,7 @@ flashcards = [
     },
     {
         "pergunta": "Um paciente de 1 ano com abaulamento em região inguinal esquerda e testículo tópico direito. Quais as hipóteses e como diferenciá-las?",
-        "resposta": "Criptocardia e Hérnia inguinal -> diferenciar através do exame físico associado ao US inguinal"
+        "resposta": "Criptoquirdia e Hérnia inguinal -> diferenciar através do exame físico associado ao US inguinal"
     },
     {
         "pergunta": "Qual é o principal risco clínico associado ao RVU não tratado?",
