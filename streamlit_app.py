@@ -169,7 +169,7 @@ flashcards = [
     },
     {
         "pergunta": "Por que a função renal diferencial <40% é considerada um marcador decisivo de obstrução significativa, e como isso orienta a conduta?",
-        "resposta": "Valores <40% indicam perda funcional relvante, definindo obstrução com repercussão hemodinâmica importante e orientado cirurgia para evitar deterioração irreversível"
+        "resposta": "Valores <40% indicam perda funcional relevante, definindo obstrução com repercussão hemodinâmica importante e orientado cirurgia para evitar deterioração irreversível"
     },
     {
         "pergunta": "Em quadros de apresentação tardia (adolescentes/adultos), como sintomas como dor intermitente e nefrolitíase se relacionam com a fisiopatologia da obstrução?",
