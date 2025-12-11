@@ -198,17 +198,21 @@ flashcards = [
 
 def normalizar_texto(txt: str) -> str:
     txt = txt.lower().strip()
-    # remove espaços duplicados
     return " ".join(txt.split())
 
 def avaliar_resposta(resposta_usuario: str, resposta_correta: str, limite: float = 0.7):
-    """Retorna (acertou: bool, similaridade: float de 0 a 1)."""
+    """Retorna (acertou: bool, similaridade: float 0-1)."""
     if not resposta_usuario.strip():
         return False, 0.0
     u = normalizar_texto(resposta_usuario)
     g = normalizar_texto(resposta_correta)
     score = difflib.SequenceMatcher(None, u, g).ratio()
     return score >= limite, score
+
+def add_to_review(card_idx: int):
+    """Adiciona o card atual à lista de revisão, sem duplicar."""
+    if card_idx not in st.session_state.review_order:
+        st.session_state.review_order.append(card_idx)
 
 # --- Estado inicial / embaralhamento ---
 
@@ -231,8 +235,15 @@ if "num_answered" not in st.session_state:
 if "ultima_correcao" not in st.session_state:
     st.session_state.ultima_correcao = None  # (acertou, score)
 
+if "in_review" not in st.session_state:
+    st.session_state.in_review = False
+
+if "review_order" not in st.session_state:
+    st.session_state.review_order = []
+
 order = st.session_state.order
-num_cards = len(order)
+review_order = st.session_state.review_order
+in_review = st.session_state.in_review
 card_index = st.session_state.card_index
 
 # --- Placar / desempenho ---
@@ -243,23 +254,21 @@ taxa = (acertos / respondidas * 100) if respondidas > 0 else 0
 
 col_score1, col_score2 = st.columns([3, 1])
 with col_score1:
-    st.markdown(f"**Desempenho:** {acertos} / {respondidas} questões \
-({taxa:.0f}%)")
-
+    st.markdown(f"**Desempenho geral:** {acertos} / {respondidas} questões ({taxa:.0f}%)")
 with col_score2:
     if st.button("Zerar estatísticas"):
         st.session_state.num_correct = 0
         st.session_state.num_answered = 0
         st.session_state.ultima_correcao = None
-        # limpa marcas de correção por card
+        # limpa flags de correção
         for k in list(st.session_state.keys()):
             if k.startswith("corrigido_"):
                 del st.session_state[k]
-        st.experimental_rerun()
+        st.success("Estatísticas zeradas.")
 
 st.write("---")
 
-# --- Botões de controle (tratados ANTES do card) ---
+# --- Botões de controle (1 por clique) ---
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -273,53 +282,121 @@ with col3:
     next_clicked = st.button("Próximo ➡️")
 
 with col4:
-    shuffle_clicked = st.button("🔀 Embaralhar deck")
+    shuffle_clicked = st.button("🔄 Nova rodada")
 
-# Atualiza índice e estado com base nos cliques
-if prev_clicked:
-    card_index = (card_index - 1) % num_cards
-    st.session_state.show_answer = False
-    st.session_state.ultima_correcao = None
-
-if next_clicked:
-    card_index = (card_index + 1) % num_cards
-    st.session_state.show_answer = False
-    st.session_state.ultima_correcao = None
-
+# Navegação / fases
 if shuffle_clicked:
+    # nova rodada principal, embaralhando tudo e limpando revisão
+    st.session_state.order = list(range(len(flashcards)))
     random.shuffle(st.session_state.order)
+    st.session_state.review_order = []
+    st.session_state.in_review = False
     card_index = 0
     st.session_state.show_answer = False
     st.session_state.ultima_correcao = None
 
-# grava o índice atualizado
+elif prev_clicked:
+    if in_review and review_order:
+        card_index = (card_index - 1) % len(review_order)
+    elif (not in_review) and order:
+        card_index = (card_index - 1) % len(order)
+    st.session_state.show_answer = False
+    st.session_state.ultima_correcao = None
+
+elif next_clicked:
+    if in_review:
+        if review_order:
+            if card_index + 1 < len(review_order):
+                card_index += 1
+            else:
+                # terminou revisão -> nova rodada principal
+                st.session_state.order = list(range(len(flashcards)))
+                random.shuffle(st.session_state.order)
+                st.session_state.review_order = []
+                st.session_state.in_review = False
+                card_index = 0
+        else:
+            # estava em revisão sem cards -> vai pra principal
+            st.session_state.order = list(range(len(flashcards)))
+            random.shuffle(st.session_state.order)
+            st.session_state.in_review = False
+            card_index = 0
+    else:
+        # fase principal
+        if order:
+            if card_index + 1 < len(order):
+                card_index += 1
+            else:
+                # acabou a rodada principal -> vai para revisão se houver cards marcados
+                if review_order:
+                    st.session_state.in_review = True
+                    in_review = True
+                    card_index = 0
+                else:
+                    # sem revisão, começa nova rodada principal
+                    st.session_state.order = list(range(len(flashcards)))
+                    random.shuffle(st.session_state.order)
+                    card_index = 0
+    st.session_state.show_answer = False
+    st.session_state.ultima_correcao = None
+
+# Atualiza estado após navegação
 st.session_state.card_index = card_index
+st.session_state.in_review = in_review
 
-# --- Seleciona o card atual ---
+order = st.session_state.order
+review_order = st.session_state.review_order
+in_review = st.session_state.in_review
+card_index = st.session_state.card_index
 
-card_idx = order[card_index]
+# --- Seleciona card atual conforme fase ---
+
+if in_review:
+    fase_nome = "Revisão"
+    total_fase = max(len(review_order), 1)
+    if review_order:
+        card_idx = review_order[card_index % len(review_order)]
+    else:
+        # fallback: se por algum motivo não tiver review, usa principal
+        fase_nome = "Principal"
+        total_fase = len(order)
+        card_idx = order[card_index % len(order)]
+else:
+    fase_nome = "Principal"
+    total_fase = max(len(order), 1)
+    card_idx = order[card_index % len(order)]
+
 card = flashcards[card_idx]
 
-st.markdown(f"**Card {card_index + 1} de {num_cards}**")
+st.markdown(f"**Card {card_index + 1} de {total_fase} — Fase: _{fase_nome}_**")
 
 st.subheader("Pergunta")
 st.write(card["pergunta"])
 
-# Campo para o usuário digitar a resposta (por card original)
+# Campo para o usuário digitar a resposta (uma caixa por card original)
 answer_key = f"resposta_{card_idx}"
 resposta_usuario = st.text_area("Digite sua resposta:", key=answer_key)
+
+# Botão para marcar card manualmente para revisão
+repeat_clicked = st.button("🔁 Marcar este card para repetir")
+if repeat_clicked:
+    add_to_review(card_idx)
+    st.info("Card marcado para revisão ao final da rodada principal.")
 
 # --- Quando clicar em Ver resposta: corrige + atualiza placar ---
 
 if show_clicked:
     st.session_state.show_answer = True
 
-    # evita contar várias vezes o mesmo card no placar
     corrigido_key = f"corrigido_{card_idx}"
     ja_corrigido = st.session_state.get(corrigido_key, False)
 
     acertou, score = avaliar_resposta(resposta_usuario, card["resposta"])
     st.session_state.ultima_correcao = (acertou, score)
+
+    # se resposta foi fraca, entra automaticamente na revisão
+    if score < 0.7:
+        add_to_review(card_idx)
 
     if not ja_corrigido:
         st.session_state.num_answered += 1
