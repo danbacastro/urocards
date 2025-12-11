@@ -155,7 +155,6 @@ flashcards = [
         "pergunta": "Um paciente de 1 ano com abaulamento em região inguinal esquerda e testículo tópico direito. Quais as hipóteses e como diferenciá-las?",
         "resposta": "Criptocardia e Hérnia inguinal -> diferenciar através do exame físico associado ao US inguinal"
     },
-    # --- Novos flashcards ---
     {
         "pergunta": "Qual é o principal risco clínico associado ao RVU não tratado?",
         "resposta": "Pielonefrite recorente que pode evoluir com cicatrizes renais permanentes, levando a hipertensão arterial e, em casos graves, disfunção renal crônica."
@@ -195,7 +194,9 @@ flashcards = [
 ]
 
 # --- Estado inicial ---
-if "order" not in st.session_state:
+# --- Estado inicial / embaralhamento ---
+if "order" not in st.session_state or len(st.session_state.order) != len(flashcards):
+    # cria uma lista com os índices dos cards e embaralha
     st.session_state.order = list(range(len(flashcards)))
     random.shuffle(st.session_state.order)
 
@@ -207,42 +208,57 @@ if "show_answer" not in st.session_state:
 
 order = st.session_state.order
 num_cards = len(order)
-idx = st.session_state.card_index
-card_idx = order[idx]
+
+# trabalhamos com uma cópia local do índice para atualizar primeiro
+card_index = st.session_state.card_index
+
+# --- Botões de controle (agora tratados ANTES de desenhar o card) ---
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    prev_clicked = st.button("⬅️ Anterior")
+
+with col2:
+    show_clicked = st.button("Ver resposta")
+
+with col3:
+    next_clicked = st.button("Próximo ➡️")
+
+with col4:
+    shuffle_clicked = st.button("🔀 Embaralhar deck")
+
+# Atualiza índice e estado com base nos cliques
+if prev_clicked:
+    card_index = (card_index - 1) % num_cards
+    st.session_state.show_answer = False
+
+if next_clicked:
+    card_index = (card_index + 1) % num_cards
+    st.session_state.show_answer = False
+
+if shuffle_clicked:
+    random.shuffle(st.session_state.order)
+    card_index = 0
+    st.session_state.show_answer = False
+
+if show_clicked:
+    st.session_state.show_answer = True
+
+# grava o índice atualizado no session_state
+st.session_state.card_index = card_index
+
+# --- Agora, com o índice já atualizado, escolhemos o card certo ---
+card_idx = order[card_index]
 card = flashcards[card_idx]
 
-st.markdown(f"**Card {idx + 1} de {num_cards}**")
+st.markdown(f"**Card {card_index + 1} de {num_cards}**")
 
-# --- Pergunta (frente do card) ---
 st.subheader("Pergunta")
 st.write(card["pergunta"])
 
 # Campo para o usuário digitar a resposta (uma caixa por card original)
 answer_key = f"resposta_{card_idx}"
 st.text_area("Digite sua resposta:", key=answer_key)
-
-# --- Botões de controle ---
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    if st.button("⬅️ Anterior"):
-        st.session_state.card_index = (st.session_state.card_index - 1) % num_cards
-        st.session_state.show_answer = False
-
-with col2:
-    if st.button("Ver resposta"):
-        st.session_state.show_answer = True
-
-with col3:
-    if st.button("Próximo ➡️"):
-        st.session_state.card_index = (st.session_state.card_index + 1) % num_cards
-        st.session_state.show_answer = False
-
-with col4:
-    if st.button("🔀 Embaralhar deck"):
-        random.shuffle(st.session_state.order)
-        st.session_state.card_index = 0
-        st.session_state.show_answer = False
 
 # --- Mostrar resposta correta (verso do card) ---
 if st.session_state.show_answer:
