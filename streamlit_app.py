@@ -1,4 +1,5 @@
 import streamlit as st
+import random
 
 st.set_page_config(page_title="Flashcards Urologia", page_icon="🧠")
 
@@ -157,15 +158,22 @@ flashcards = [
 ]
 
 # --- Estado inicial ---
+if "order" not in st.session_state:
+    # cria uma lista com os índices dos cards e embaralha
+    st.session_state.order = list(range(len(flashcards)))
+    random.shuffle(st.session_state.order)
+
 if "card_index" not in st.session_state:
     st.session_state.card_index = 0
 
 if "show_answer" not in st.session_state:
     st.session_state.show_answer = False
 
-num_cards = len(flashcards)
+order = st.session_state.order
+num_cards = len(order)
 idx = st.session_state.card_index
-card = flashcards[idx]
+card_idx = order[idx]
+card = flashcards[card_idx]
 
 st.markdown(f"**Card {idx + 1} de {num_cards}**")
 
@@ -173,12 +181,12 @@ st.markdown(f"**Card {idx + 1} de {num_cards}**")
 st.subheader("Pergunta")
 st.write(card["pergunta"])
 
-# Campo para o usuário digitar a resposta (cada card tem sua própria caixa)
-answer_key = f"resposta_{idx}"
+# Campo para o usuário digitar a resposta (uma caixa por card original)
+answer_key = f"resposta_{card_idx}"
 st.text_area("Digite sua resposta:", key=answer_key)
 
 # --- Botões de controle ---
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     if st.button("⬅️ Anterior"):
@@ -192,6 +200,12 @@ with col2:
 with col3:
     if st.button("Próximo ➡️"):
         st.session_state.card_index = (st.session_state.card_index + 1) % num_cards
+        st.session_state.show_answer = False
+
+with col4:
+    if st.button("🔀 Embaralhar deck"):
+        random.shuffle(st.session_state.order)
+        st.session_state.card_index = 0
         st.session_state.show_answer = False
 
 # --- Mostrar resposta correta (verso do card) ---
