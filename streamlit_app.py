@@ -44,8 +44,8 @@ flashcards = [
         "resposta": "Tabagismo, aminas aromáticas"
     },
     {
-        "pergunta": "Em relação ao Câncer de Bexiga, qual a incidência e população?",
-        "resposta": "2º câncer urológico e homens brancos"
+        "pergunta": "Em relação ao Câncer de Bexiga, qual a incidência/população?",
+        "resposta": "2º câncer urológico/homens brancos"
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, como diagnosticar?",
