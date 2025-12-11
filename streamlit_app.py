@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import difflib
 
 st.set_page_config(page_title="Urocards", page_icon="🧠")
 
@@ -193,10 +194,25 @@ flashcards = [
     },
 ]
 
-# --- Estado inicial ---
+# --- Funções auxiliares ---
+
+def normalizar_texto(txt: str) -> str:
+    txt = txt.lower().strip()
+    # remove espaços duplicados
+    return " ".join(txt.split())
+
+def avaliar_resposta(resposta_usuario: str, resposta_correta: str, limite: float = 0.7):
+    """Retorna (acertou: bool, similaridade: float de 0 a 1)."""
+    if not resposta_usuario.strip():
+        return False, 0.0
+    u = normalizar_texto(resposta_usuario)
+    g = normalizar_texto(resposta_correta)
+    score = difflib.SequenceMatcher(None, u, g).ratio()
+    return score >= limite, score
+
 # --- Estado inicial / embaralhamento ---
+
 if "order" not in st.session_state or len(st.session_state.order) != len(flashcards):
-    # cria uma lista com os índices dos cards e embaralha
     st.session_state.order = list(range(len(flashcards)))
     random.shuffle(st.session_state.order)
 
@@ -206,13 +222,45 @@ if "card_index" not in st.session_state:
 if "show_answer" not in st.session_state:
     st.session_state.show_answer = False
 
+if "num_correct" not in st.session_state:
+    st.session_state.num_correct = 0
+
+if "num_answered" not in st.session_state:
+    st.session_state.num_answered = 0
+
+if "ultima_correcao" not in st.session_state:
+    st.session_state.ultima_correcao = None  # (acertou, score)
+
 order = st.session_state.order
 num_cards = len(order)
-
-# trabalhamos com uma cópia local do índice para atualizar primeiro
 card_index = st.session_state.card_index
 
-# --- Botões de controle (agora tratados ANTES de desenhar o card) ---
+# --- Placar / desempenho ---
+
+acertos = st.session_state.num_correct
+respondidas = st.session_state.num_answered
+taxa = (acertos / respondidas * 100) if respondidas > 0 else 0
+
+col_score1, col_score2 = st.columns([3, 1])
+with col_score1:
+    st.markdown(f"**Desempenho:** {acertos} / {respondidas} questões \
+({taxa:.0f}%)")
+
+with col_score2:
+    if st.button("Zerar estatísticas"):
+        st.session_state.num_correct = 0
+        st.session_state.num_answered = 0
+        st.session_state.ultima_correcao = None
+        # limpa marcas de correção por card
+        for k in list(st.session_state.keys()):
+            if k.startswith("corrigido_"):
+                del st.session_state[k]
+        st.experimental_rerun()
+
+st.write("---")
+
+# --- Botões de controle (tratados ANTES do card) ---
+
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -231,23 +279,24 @@ with col4:
 if prev_clicked:
     card_index = (card_index - 1) % num_cards
     st.session_state.show_answer = False
+    st.session_state.ultima_correcao = None
 
 if next_clicked:
     card_index = (card_index + 1) % num_cards
     st.session_state.show_answer = False
+    st.session_state.ultima_correcao = None
 
 if shuffle_clicked:
     random.shuffle(st.session_state.order)
     card_index = 0
     st.session_state.show_answer = False
+    st.session_state.ultima_correcao = None
 
-if show_clicked:
-    st.session_state.show_answer = True
-
-# grava o índice atualizado no session_state
+# grava o índice atualizado
 st.session_state.card_index = card_index
 
-# --- Agora, com o índice já atualizado, escolhemos o card certo ---
+# --- Seleciona o card atual ---
+
 card_idx = order[card_index]
 card = flashcards[card_idx]
 
@@ -256,15 +305,40 @@ st.markdown(f"**Card {card_index + 1} de {num_cards}**")
 st.subheader("Pergunta")
 st.write(card["pergunta"])
 
-# Campo para o usuário digitar a resposta (uma caixa por card original)
+# Campo para o usuário digitar a resposta (por card original)
 answer_key = f"resposta_{card_idx}"
-st.text_area("Digite sua resposta:", key=answer_key)
+resposta_usuario = st.text_area("Digite sua resposta:", key=answer_key)
 
-# --- Mostrar resposta correta (verso do card) ---
+# --- Quando clicar em Ver resposta: corrige + atualiza placar ---
+
+if show_clicked:
+    st.session_state.show_answer = True
+
+    # evita contar várias vezes o mesmo card no placar
+    corrigido_key = f"corrigido_{card_idx}"
+    ja_corrigido = st.session_state.get(corrigido_key, False)
+
+    acertou, score = avaliar_resposta(resposta_usuario, card["resposta"])
+    st.session_state.ultima_correcao = (acertou, score)
+
+    if not ja_corrigido:
+        st.session_state.num_answered += 1
+        if acertou:
+            st.session_state.num_correct += 1
+        st.session_state[corrigido_key] = True
+
+# --- Mostrar resposta e feedback ---
+
 if st.session_state.show_answer:
     st.subheader("Sua resposta")
-    user_answer = st.session_state.get(answer_key, "")
-    st.write(user_answer if user_answer.strip() else "_(você não escreveu nada)_")
+    st.write(resposta_usuario if resposta_usuario.strip() else "_(você não escreveu nada)_")
 
     st.subheader("Resposta correta")
     st.write(card["resposta"])
+
+    if st.session_state.ultima_correcao is not None:
+        acertou, score = st.session_state.ultima_correcao
+        if acertou:
+            st.write(f"✅ **Você ACERTOU.** Similaridade com o gabarito: {score:.0%}")
+        else:
+            st.write(f"❌ **Você NÃO acertou totalmente.** Similaridade com o gabarito: {score:.0%}")
