@@ -50,7 +50,7 @@ flashcards = [
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, como diagnosticar?",
-        "resposta": "Cistoscopia"
+        "resposta": "Cistoscopia com biópsia"
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, qual o quadro clínico?",
@@ -62,11 +62,11 @@ flashcards = [
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, qual o tratamento para não invasivo?",
-        "resposta": "Cistoscopia + BCG"
+        "resposta": "RTU + BCG"
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, qual o tratamento para invasivo?",
-        "resposta": "Cistoscopia com ressecção de margem + Histopatológico + Cistectomia radical"
+        "resposta": "Cistectomia radical + linfadenectomia abdominal/pélvica bilateral + derivação urinária"
     },
     {
         "pergunta": "Em relação ao Câncer de Bexiga, quais os tipos de derivação urinária?",
