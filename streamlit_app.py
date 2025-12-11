@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Flashcards Urologia", page_icon="🧠")
 
-st.title("🧠 Urocards – Flashcards de Urologia")
+st.title("🧠 Urocards - Flashcards de Urologia")
 
 # --- Definição dos flashcards ---
 flashcards = [
@@ -128,4 +128,77 @@ flashcards = [
     },
     {
         "pergunta": "Em relação ao Câncer de Testículo, quais os subtipos histopatológicos?",
-        "resposta": "Seminematoso (principal: seminoma) e não seminematoso (principais: tumor misto e carcinoma embrio
+        "resposta": "Seminematoso (principal: seminoma) e não seminematoso (principais: tumor misto e carcinoma embrionário)"
+    },
+    {
+        "pergunta": "Em relação ao Câncer de Testículo, como faz o diagnóstico?",
+        "resposta": "Paciente jovem com nodulação/endurecimento do testículo sem dor e com aumento de volume testicular -> US escrotal"
+    },
+    {
+        "pergunta": "Em relação ao Câncer de Testículo, quais os locais de metástase?",
+        "resposta": "Gânglios paraórticos e pulmão"
+    },
+    {
+        "pergunta": "Em relação ao Câncer de Testículo, qual o tratamento?",
+        "resposta": "Orquiectomia radical por via inguinal com biópsia intraoperatória"
+    },
+    {
+        "pergunta": "Em relação ao Câncer de Testículo, porque não se viola bolsa escrotal?",
+        "resposta": "Risco de embolizar o tumor"
+    },
+    {
+        "pergunta": "Um exame de espermograma alterado é suficiente para diagnóstico de infertilidade?",
+        "resposta": "Não, pois o espermograma pode alterar devido a infecções, inflamação, ingesta de álcool, etc, sendo necessário repetir o exame após 2 semanas"
+    },
+    {
+        "pergunta": "Um paciente de 1 ano com abaulamento em região inguinal esquerda e testículo tópico direito. Quais as hipóteses e como diferenciá-las?",
+        "resposta": "Criptocardia e Hérnia inguinal -> diferenciar através do exame físico associado ao US inguinal"
+    },
+]
+
+# --- Estado inicial ---
+if "card_index" not in st.session_state:
+    st.session_state.card_index = 0
+
+if "show_answer" not in st.session_state:
+    st.session_state.show_answer = False
+
+num_cards = len(flashcards)
+idx = st.session_state.card_index
+card = flashcards[idx]
+
+st.markdown(f"**Card {idx + 1} de {num_cards}**")
+
+# --- Pergunta (frente do card) ---
+st.subheader("Pergunta")
+st.write(card["pergunta"])
+
+# Campo para o usuário digitar a resposta (cada card tem sua própria caixa)
+answer_key = f"resposta_{idx}"
+st.text_area("Digite sua resposta:", key=answer_key)
+
+# --- Botões de controle ---
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("⬅️ Anterior"):
+        st.session_state.card_index = (st.session_state.card_index - 1) % num_cards
+        st.session_state.show_answer = False
+
+with col2:
+    if st.button("Ver resposta"):
+        st.session_state.show_answer = True
+
+with col3:
+    if st.button("Próximo ➡️"):
+        st.session_state.card_index = (st.session_state.card_index + 1) % num_cards
+        st.session_state.show_answer = False
+
+# --- Mostrar resposta correta (verso do card) ---
+if st.session_state.show_answer:
+    st.subheader("Sua resposta")
+    user_answer = st.session_state.get(answer_key, "")
+    st.write(user_answer if user_answer.strip() else "_(você não escreveu nada)_")
+
+    st.subheader("Resposta correta")
+    st.write(card["resposta"])
